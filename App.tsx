@@ -94,6 +94,50 @@ const getBrowsingContext = (files: FileSystemNode[]): string => {
         .join('\n\n');
 };
 
+// Helper to gather full agent context including browsing and research
+const getAgentContext = (files: FileSystemNode[]): string => {
+    let contextParts: string[] = [];
+
+    // 1. Browsed Data
+    const browseDir = getDirectory(files, '/browse');
+    if (browseDir && browseDir.children && browseDir.children.length > 0) {
+        const browseContent = browseDir.children
+            .filter(c => c.type === 'file')
+            .map(c => `[SOURCE: /browse/${c.name}]\n${c.content}`)
+            .join('\n\n');
+        if (browseContent) contextParts.push("--- BROWSED EXTERNAL INTELLIGENCE ---\n" + browseContent);
+    }
+
+    // 2. Generated Documentation & Specs
+    const docPaths = [
+        '/docs/agent_hopper_analysis.md', 
+        '/docs/deep_dive_intel.md',
+        '/docs/specs/defense_architecture.md'
+    ];
+    
+    let docsContent = "";
+    docPaths.forEach(path => {
+        const f = getFile(files, path);
+        if (f && f.content) {
+            docsContent += `[DOCUMENT: ${path}]\n${f.content}\n\n`;
+        }
+    });
+    
+    // Also include exploits if any
+    const exploitsDir = getDirectory(files, '/exploits');
+    if (exploitsDir && exploitsDir.children) {
+        exploitsDir.children.forEach(c => {
+             if(c.type === 'file') {
+                 docsContent += `[ARTIFACT: /exploits/${c.name}]\n${c.content}\n\n`;
+             }
+        });
+    }
+
+    if (docsContent) contextParts.push("--- INTERNAL RESEARCH & ARTIFACTS ---\n" + docsContent);
+
+    return contextParts.join('\n\n');
+};
+
 const incrementVersion = (v: string) => {
     const parts = v.split('.');
     if(parts.length < 3) return v + '.1';
@@ -234,9 +278,10 @@ const App: React.FC = () => {
     setIsAgentThinking(true);
 
     try {
+        const context = getAgentContext(files);
         // We pass the messages but filter out system/tools for simplicity if needed, 
         // or just pass pure text history? The service converts them.
-        const response = await chatWithSecurityAgent(agentMessages, msg);
+        const response = await chatWithSecurityAgent(agentMessages, msg, context);
         
         let agentText = response.text || "";
         const toolCalls = response.functionCalls;

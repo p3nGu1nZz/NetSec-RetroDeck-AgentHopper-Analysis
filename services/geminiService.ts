@@ -67,14 +67,10 @@ const writeFileTool: FunctionDeclaration = {
 
 export const chatWithSecurityAgent = async (
   history: any[],
-  newMessage: string
+  newMessage: string,
+  contextData: string = ""
 ) => {
     const ai = getAiClient();
-    
-    // Convert history to Gemini format if needed, but here we assume caller manages it or we send a new request each time with context.
-    // For simplicity with the new SDK, we'll use generateContent with the full history as "contents" if possible, 
-    // or just maintain a chat session object in the App state? 
-    // The prompt asks for a "chat interface". Let's create a ephemeral chat for the request context.
     
     const systemInstruction = `
     You are the "NetSec AI Core", an advanced cybersecurity agent embedded in the NetSec RetroDeck OS.
@@ -86,10 +82,12 @@ export const chatWithSecurityAgent = async (
     3. Always verify file existence with 'listFiles' or 'readFile' before editing if unsure.
     4. Maintain the "retro cyber-security" persona.
     5. Context: The user is analyzing 'AgentHopper' (AI Worm).
+
+    SYSTEM KNOWLEDGE BASE (Research, Browsed Data, Specs):
+    ${contextData ? contextData.substring(0, 100000) : "No additional system context available."}
     `;
 
     // Construct the turn-based history for the API
-    // The history passed in is our internal AgentMessage[]. We need to map it.
     const contents = history.map(msg => ({
         role: msg.role === 'model' ? 'model' : 'user',
         parts: [{ text: msg.text }]
