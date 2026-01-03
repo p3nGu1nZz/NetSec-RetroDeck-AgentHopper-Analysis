@@ -1,0 +1,5 @@
+{
+  "name": "NetSec RetroDeck: AgentHopper Analysis",
+  "description": "A retro-styled cyber-security toolkit and terminal interface designed to analyze the AgentHopper AI worm, generate defense documentation, and specify anti-virus architectures using Gemini AI.",
+  "requestFramePermissions": []
+}
