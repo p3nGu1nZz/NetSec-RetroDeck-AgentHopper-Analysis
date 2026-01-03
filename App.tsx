@@ -396,7 +396,7 @@ const App: React.FC = () => {
       setAppState(AppState.ERROR);
       const msg = (e as Error).message;
       if (msg.includes('MISSING_API_KEY')) {
-         addLine(`ERROR: API KEY REQUIRED.\nRun 'setkey <YOUR_GEMINI_API_KEY>' to configure the agent.`, 'error');
+         addLine(`ERROR: API KEY REQUIRED.\nRun 'setkey' to configure.`, 'error');
       } else {
          addLine(`ANALYSIS FAILED: ${msg}`, 'error');
       }
@@ -455,7 +455,7 @@ const App: React.FC = () => {
       setAppState(AppState.ERROR);
       const msg = (e as Error).message;
       if (msg.includes('MISSING_API_KEY')) {
-         addLine(`ERROR: API KEY REQUIRED.\nRun 'setkey <YOUR_GEMINI_API_KEY>'.`, 'error');
+         addLine(`ERROR: API KEY REQUIRED.\nRun 'setkey' to configure.`, 'error');
       } else {
          addLine(`RESEARCH FAILED: ${msg}`, 'error');
       }
@@ -707,7 +707,25 @@ const App: React.FC = () => {
             addLine(`STATE: ${appState}\nVER: ${sessionVersion}\nCWD: ${currentPath}\nKEY: ${envKey ? 'ENV' : (localKey ? 'LOCAL' : 'MISSING')}`);
             break;
         case 'setkey':
-            if (args.length < 2) addLine('Usage: setkey <KEY>', 'error');
+            const currentEnvKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
+            const currentLocalKey = localStorage.getItem('gemini_api_key');
+            const hasKey = !!(currentEnvKey || currentLocalKey);
+
+            if (args.length < 2) {
+                if (hasKey) {
+                   addLine(`API KEY STATUS: ACTIVE (${currentEnvKey ? 'ENV' : 'STORAGE'}).`, 'success'); 
+                   addLine('To overwrite: setkey <NEW_KEY>', 'system');
+                } else {
+                   // Prompt for key
+                   const userKey = window.prompt("ENTER GEMINI API KEY:");
+                   if (userKey && userKey.trim()) {
+                       localStorage.setItem('gemini_api_key', userKey.trim());
+                       addLine('API KEY STORED.', 'success');
+                   } else {
+                       addLine('INPUT CANCELLED.', 'error');
+                   }
+                }
+            }
             else {
                 localStorage.setItem('gemini_api_key', args[1]);
                 addLine('KEY UPDATED.', 'success');
