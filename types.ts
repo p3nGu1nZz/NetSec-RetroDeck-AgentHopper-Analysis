@@ -19,6 +19,8 @@ export enum AppState {
   GENERATING_DOCS = 'GENERATING_DOCS',
   GENERATING_SPECS = 'GENERATING_SPECS',
   RESEARCHING = 'RESEARCHING',
+  BROWSING = 'BROWSING',
+  SCANNING = 'SCANNING',
   COMPLETE = 'COMPLETE',
   ERROR = 'ERROR'
 }
@@ -34,4 +36,19 @@ export interface SessionData {
   timestamp: number;
   files: FileSystemNode[];
   terminalLines: TerminalLine[];
+}
+
+export interface BrowserState {
+  url: string;
+  content: string;
+  links: string[];
+  history: string[];
+}
+
+export interface AgentMessage {
+  id: string;
+  role: 'user' | 'model' | 'system';
+  text: string;
+  timestamp: number;
+  isToolOutput?: boolean;
 }
